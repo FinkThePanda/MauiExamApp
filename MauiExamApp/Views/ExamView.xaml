@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodels="clr-namespace:MauiExamApp.ViewModels"
              xmlns:converters="clr-namespace:MauiExamApp.Converters"
              x:DataType="viewmodels:ExamViewModel"
              x:Class="MauiExamApp.Views.ExamView"
+             Shell.NavBarIsVisible="False"
              Title="{Binding CurrentExam.CourseName}">
 
     <ContentPage.Resources>
@@ -13,55 +13,82 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <ScrollView>
-        <VerticalStackLayout Spacing="15" Padding="20">
+    <Grid RowDefinitions="Auto, *">
+        <!-- Header -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Padding="10" BackgroundColor="#EBF2FF">
+            <Button Grid.Column="0" Text="&lt; Tilbage" Command="{Binding GoBackCommand}" HorizontalOptions="Start"/>
+            <Label Grid.Column="1" Text="{Binding CurrentExam.CourseName}" FontSize="Title" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center"/>
+            <Label Grid.Column="2" Text="{Binding ProgressText}" HorizontalOptions="End" VerticalOptions="Center" Padding="0,0,10,0"/>
+        </Grid>
 
-            <!-- Viser hvis eksamen er færdig -->
-            <VerticalStackLayout IsVisible="{Binding IsExamFinished}" Spacing="10">
-                <Label Text="Eksamen er færdig!" FontSize="Header" HorizontalOptions="Center"/>
-                <Label Text="Alle studerende er blevet eksamineret." HorizontalOptions="Center"/>
-                <Button Text="Afslut og gå til Dashboard" Command="{Binding FinishExamAndGoBackCommand}"/>
-            </VerticalStackLayout>
+        <!-- Main Content -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="20" Spacing="20">
 
-            <!-- Viser under eksamination -->
-            <VerticalStackLayout IsVisible="{Binding IsExamFinished, Converter={StaticResource InvertedBoolConverter}}" Spacing="20">
-                <!-- Info om studerende -->
-                <Frame>
-                    <VerticalStackLayout>
-                        <Label Text="Eksaminand:" FontSize="Small" TextColor="Gray"/>
-                        <Label Text="{Binding CurrentStudent.FullName}" FontSize="Title" FontAttributes="Bold"/>
-                        <Label Text="{Binding CurrentStudent.StudentNumber}" FontSize="Subtitle"/>
+                <!-- Exam Finished View -->
+                <VerticalStackLayout IsVisible="{Binding IsExamFinished}" Spacing="15" VerticalOptions="Center" HorizontalOptions="Center" Padding="20">
+                    <Label Text="Eksamen er færdig!" FontSize="Header" HorizontalOptions="Center"/>
+                    <Label Text="Alle studerende er blevet eksamineret." HorizontalOptions="Center"/>
+                    <Button Text="Afslut og gå til Historik" Command="{Binding FinishExamAndGoBackCommand}" Margin="0,20,0,0"/>
+                </VerticalStackLayout>
+
+                <!-- Two-Column Layout for Active Exam -->
+                <Grid IsVisible="{Binding IsExamFinished, Converter={StaticResource InvertedBoolConverter}}"
+                      ColumnDefinitions="*,*"
+                      ColumnSpacing="20">
+
+                    <!-- Left Column -->
+                    <VerticalStackLayout Grid.Column="0" Spacing="20">
+                        <!-- Student Info -->
+                        <Border Stroke="LightGray" StrokeThickness="1" Padding="15">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="10"/></Border.StrokeShape>
+                            <VerticalStackLayout>
+                                <Label Text="Eksaminand:" FontSize="Small" TextColor="Gray"/>
+                                <Label Text="{Binding CurrentStudent.FullName}" FontSize="32" FontAttributes="Bold"/>
+                                <Label Text="{Binding CurrentStudent.StudentNumber}" FontSize="16"/>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- Draw Question -->
+                        <Border Stroke="LightGray" StrokeThickness="1" Padding="15">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="10"/></Border.StrokeShape>
+                            <VerticalStackLayout Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
+                                <Label Text="Trukket Spørgsmål" HorizontalOptions="Center"/>
+                                <Label Text="{Binding DrawnQuestion, FallbackValue='?'}" FontSize="60" FontAttributes="Bold" HorizontalOptions="Center"/>
+                                <Button Text="Træk Spørgsmål" Command="{Binding DrawQuestionCommand}" IsEnabled="{Binding CanDrawQuestion}" HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- Timer -->
+                        <Border Stroke="LightGray" StrokeThickness="1" Padding="15">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="10"/></Border.StrokeShape>
+                            <VerticalStackLayout Spacing="10">
+                                <Label Text="{Binding TimerText}" FontSize="50" HorizontalOptions="Center" FontAttributes="Bold"/>
+                                <ProgressBar Progress="{Binding TimeProgress}" ProgressColor="CornflowerBlue"/>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                    <Button Grid.Column="0" Text="Start" Command="{Binding StartExaminationCommand}" IsEnabled="{Binding CanStartTimer}"/>
+                                    <Button Grid.Column="1" Text="Stop" Command="{Binding StopExaminationCommand}" IsEnabled="{Binding IsTimerRunning}"/>
+                                </Grid>
+                            </VerticalStackLayout>
+                        </Border>
                     </VerticalStackLayout>
-                </Frame>
 
-                <!-- Træk Spørgsmål -->
-                <Grid ColumnDefinitions="*,Auto">
-                    <Label Grid.Column="0" Text="{Binding DrawnQuestion, StringFormat='Trukket Spørgsmål: {0}'}" FontSize="Large" VerticalOptions="Center"/>
-                    <Button Grid.Column="1" Text="Træk Spørgsmål" Command="{Binding DrawQuestionCommand}"/>
-                </Grid>
-
-                <!-- Timer -->
-                <Frame Padding="15">
-                    <VerticalStackLayout Spacing="10">
-                        <Label Text="{Binding TimerText}" FontSize="50" HorizontalOptions="Center" FontAttributes="Bold"/>
-                        <ProgressBar Progress="{Binding TimeProgress}"/>
-                        <Grid ColumnDefinitions="*,*">
-                            <Button Grid.Column="0" Text="Start Eksamination" Command="{Binding StartExaminationCommand}" IsEnabled="{Binding IsTimerRunning, Converter={StaticResource InvertedBoolConverter}}"/>
-                            <Button Grid.Column="1" Text="Slut Eksamination" Command="{Binding StopExaminationCommand}" IsEnabled="{Binding IsTimerRunning}"/>
+                    <!-- Right Column -->
+                    <Grid Grid.Column="1" RowDefinitions="*, Auto" RowSpacing="20">
+                        <!-- Notes -->
+                        <Border Grid.Row="0" Stroke="LightGray" StrokeThickness="1">
+                             <Border.StrokeShape><RoundRectangle CornerRadius="10"/></Border.StrokeShape>
+                            <Editor Placeholder="Indtast noter her..." Text="{Binding Notes}" Margin="5" IsEnabled="{Binding CanEditNotes}" VerticalOptions="Fill"/>
+                        </Border>
+                        
+                        <!-- Grade and Save -->
+                        <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="15">
+                            <Picker Grid.Column="0" Title="Vælg Karakter" ItemsSource="{Binding Grades}" SelectedItem="{Binding SelectedGrade}"/>
+                            <Button Grid.Column="1" Text="Gem og Næste" Command="{Binding SaveAndNextStudentCommand}"/>
                         </Grid>
-                    </VerticalStackLayout>
-                </Frame>
-
-                <!-- Noter og Karakter -->
-                <Grid RowDefinitions="*,Auto" RowSpacing="10">
-                    <Editor Grid.Row="0" Placeholder="Indtast noter her..." Text="{Binding Notes}" HeightRequest="150"/>
-                    <Picker Grid.Row="1" Title="Vælg Karakter" ItemsSource="{Binding Grades}" SelectedItem="{Binding SelectedGrade}"/>
+                    </Grid>
                 </Grid>
-
-                <!-- Næste studerende -->
-                <Button Text="Gem og Næste Studerende" Command="{Binding SaveAndNextStudentCommand}" FontSize="Large" Margin="0,20,0,0"/>
-
             </VerticalStackLayout>
-        </VerticalStackLayout>
-    </ScrollView>
+        </ScrollView>
+    </Grid>
 </ContentPage>

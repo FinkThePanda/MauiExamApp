@@ -10,10 +10,10 @@ namespace MauiExamApp.ViewModels
     public partial class HistoryViewModel : BaseViewModel
     {
         private readonly DatabaseService _databaseService;
-        private List<Exam> _allCompletedExams; // Gemmer den ufiltrerede liste
+        private List<ExamDisplay> _allCompletedExams; // Gemmer den ufiltrerede liste
 
         [ObservableProperty]
-        private ObservableCollection<Exam> _completedExams;
+        private ObservableCollection<ExamDisplay> _completedExams;
         
         [ObservableProperty]
         private ObservableCollection<Student> _studentsForSelectedExam;
@@ -22,29 +22,25 @@ namespace MauiExamApp.ViewModels
         private bool _isDetailsPopupVisible = false;
 
         [ObservableProperty]
-        private Exam _selectedExam;
+        private ExamDisplay? _selectedExamDisplay; // Changed from Exam to ExamDisplay
 
         [ObservableProperty]
-        private string _averageGrade;
+        private string _averageGrade = string.Empty;
         
-        // --- Nye Properties for Filtrering ---
         [ObservableProperty]
-        private ObservableCollection<string> _courseFilterOptions;
+        private ObservableCollection<string> _courseFilterOptions = new();
 
         [ObservableProperty]
-        private ObservableCollection<string> _termFilterOptions;
+        private ObservableCollection<string> _termFilterOptions = new();
 
-        // RETTELSE: Ændret fra nameof(FilteredExams) til nameof(CompletedExams)
         [ObservableProperty]
-        private string _selectedCourseFilter;
+        private string _selectedCourseFilter = string.Empty;
 
-        // RETTELSE: Ændret fra nameof(FilteredExams) til nameof(CompletedExams)
         [ObservableProperty]
-        private string _selectedTermFilter;
+        private string _selectedTermFilter = string.Empty;
 
-        // RETTELSE: Ændret fra nameof(FilteredExams) til nameof(CompletedExams)
         [ObservableProperty]
-        private string _selectedSortOrder;
+        private string _selectedSortOrder = string.Empty;
 
         public ObservableCollection<string> SortOrderOptions { get; }
 
@@ -52,19 +48,65 @@ namespace MauiExamApp.ViewModels
         {
             _databaseService = databaseService;
             
-            // Initialiserer samlinger
-            _allCompletedExams = new List<Exam>();
-            CompletedExams = new ObservableCollection<Exam>();
+            _allCompletedExams = new List<ExamDisplay>();
+            CompletedExams = new ObservableCollection<ExamDisplay>();
             StudentsForSelectedExam = new ObservableCollection<Student>();
-            CourseFilterOptions = new ObservableCollection<string>();
-            TermFilterOptions = new ObservableCollection<string>();
             
-            // Opsæt sorteringsmuligheder
             SortOrderOptions = new ObservableCollection<string> { "Nyeste først", "Ældste først" };
-            _selectedSortOrder = SortOrderOptions.First();
+            SelectedSortOrder = SortOrderOptions.First();
         }
 
-        // Denne metode kaldes, når en filter-property ændres
+        [RelayCommand]
+        private async Task ShowDetails(ExamDisplay examDisplay)
+        {
+            if (examDisplay == null) return;
+
+            SelectedExamDisplay = examDisplay;
+            var students = await _databaseService.GetStudentsForExamAsync(examDisplay.Exam.Id);
+            StudentsForSelectedExam.Clear();
+            foreach (var student in students)
+            {
+                StudentsForSelectedExam.Add(student);
+            }
+
+            CalculateAverageGrade();
+            IsDetailsPopupVisible = true;
+        }
+
+        [RelayCommand]
+        private void CloseDetailsPopup()
+        {
+            IsDetailsPopupVisible = false;
+            SelectedExamDisplay = null;
+        }
+
+        private void CalculateAverageGrade()
+        {
+            if (StudentsForSelectedExam == null || !StudentsForSelectedExam.Any())
+            {
+                AverageGrade = "Ingen karakterer givet";
+                return;
+            }
+
+            var grades = new List<int>();
+            foreach (var student in StudentsForSelectedExam)
+            {
+                if (!string.IsNullOrEmpty(student.Grade) && int.TryParse(student.Grade, out int gradeValue))
+                {
+                    grades.Add(gradeValue);
+                }
+            }
+
+            if (!grades.Any())
+            {
+                AverageGrade = "Ingen karakterer givet";
+                return;
+            }
+
+            var average = grades.Average();
+            AverageGrade = $"Gennemsnitskarakter: {average:F2}";
+        }
+        
         partial void OnSelectedCourseFilterChanged(string value) => ApplyFilters();
         partial void OnSelectedTermFilterChanged(string value) => ApplyFilters();
         partial void OnSelectedSortOrderChanged(string value) => ApplyFilters();
@@ -73,32 +115,27 @@ namespace MauiExamApp.ViewModels
         {
             if (_allCompletedExams == null) return;
 
-            // Start med den fulde liste
-            IEnumerable<Exam> filtered = _allCompletedExams;
+            IEnumerable<ExamDisplay> filtered = _allCompletedExams;
 
-            // Anvend kursusfilter
             if (!string.IsNullOrEmpty(SelectedCourseFilter) && SelectedCourseFilter != "Alle Kurser")
             {
-                filtered = filtered.Where(e => e.CourseName == SelectedCourseFilter);
+                filtered = filtered.Where(e => e.Exam.CourseName == SelectedCourseFilter);
             }
 
-            // Anvend terminfilter
             if (!string.IsNullOrEmpty(SelectedTermFilter) && SelectedTermFilter != "Alle Terminer")
             {
-                filtered = filtered.Where(e => e.Term == SelectedTermFilter);
+                filtered = filtered.Where(e => e.Exam.Term == SelectedTermFilter);
             }
 
-            // Anvend sortering
             if (SelectedSortOrder == "Nyeste først")
             {
-                filtered = filtered.OrderByDescending(e => e.Date);
+                filtered = filtered.OrderByDescending(e => e.Exam.Date);
             }
             else
             {
-                filtered = filtered.OrderBy(e => e.Date);
+                filtered = filtered.OrderBy(e => e.Exam.Date);
             }
 
-            // Opdater den synlige samling
             CompletedExams.Clear();
             foreach (var exam in filtered)
             {
@@ -108,64 +145,30 @@ namespace MauiExamApp.ViewModels
         
         private async Task LoadAllDataAsync()
         {
-            _allCompletedExams = await _databaseService.GetExamsAsync(true); // Hent kun afsluttede
+            var examsFromDb = await _databaseService.GetExamsAsync(true);
+            
+            _allCompletedExams.Clear();
+            foreach (var exam in examsFromDb)
+            {
+                var examDisplay = new ExamDisplay(exam);
+                var students = await _databaseService.GetStudentsForExamAsync(exam.Id);
+                examDisplay.StudentCount = students.Count;
+                _allCompletedExams.Add(examDisplay);
+            }
 
-            // Udfyld filtermuligheder fra data
-            var courses = _allCompletedExams.Select(e => e.CourseName).Distinct().ToList();
+            var courses = _allCompletedExams.Select(e => e.Exam.CourseName).Distinct().ToList();
             CourseFilterOptions.Clear();
             CourseFilterOptions.Add("Alle Kurser");
             courses.ForEach(c => CourseFilterOptions.Add(c));
-            _selectedCourseFilter = CourseFilterOptions.First();
+            SelectedCourseFilter = CourseFilterOptions.First();
 
-            var terms = _allCompletedExams.Select(e => e.Term).Distinct().ToList();
+            var terms = _allCompletedExams.Select(e => e.Exam.Term).Distinct().ToList();
             TermFilterOptions.Clear();
             TermFilterOptions.Add("Alle Terminer");
             terms.ForEach(t => TermFilterOptions.Add(t));
-            _selectedTermFilter = TermFilterOptions.First();
+            SelectedTermFilter = TermFilterOptions.First();
             
-            // Anvend de initiale filtre
             ApplyFilters();
-        }
-        
-        [RelayCommand]
-        private async Task ShowDetailsPopupAsync(Exam exam)
-        {
-            if (exam == null) return;
-            
-            SelectedExam = exam;
-            var students = await _databaseService.GetStudentsForExamAsync(exam.Id);
-            
-            StudentsForSelectedExam.Clear();
-            foreach (var s in students)
-            {
-                StudentsForSelectedExam.Add(s);
-            }
-            CalculateAverageGrade(students);
-            IsDetailsPopupVisible = true;
-        }
-
-        [RelayCommand]
-        private void HideDetailsPopup()
-        {
-            IsDetailsPopupVisible = false;
-        }
-
-        private void CalculateAverageGrade(List<Student> students)
-        {
-            var validGrades = students
-                .Where(s => int.TryParse(s.Grade, out _))
-                .Select(s => int.Parse(s.Grade))
-                .ToList();
-            
-            if (validGrades.Any())
-            {
-                var average = validGrades.Average();
-                AverageGrade = $"Gennemsnit: {average:F2}";
-            }
-            else
-            {
-                AverageGrade = "Gennemsnit: N/A";
-            }
         }
         
         public async Task OnAppearing()

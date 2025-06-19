@@ -4,6 +4,7 @@ using MauiExamApp.Models;
 using MauiExamApp.Services;
 using MauiExamApp.Views;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MauiExamApp.ViewModels
@@ -13,30 +14,21 @@ namespace MauiExamApp.ViewModels
         private readonly DatabaseService _databaseService;
 
         [ObservableProperty]
-        private ObservableCollection<Exam> _upcomingExams = new();
-
+        private ObservableCollection<ExamDisplay> _upcomingExams = new();
         [ObservableProperty]
         private ObservableCollection<Student> _studentsForSelectedExam = new();
-        
         [ObservableProperty]
         private bool _isStudentPopupVisible = false;
-
         [ObservableProperty]
         private Exam? _selectedExam;
-
         [ObservableProperty]
         private string _newStudentNumber = string.Empty;
-        
         [ObservableProperty]
         private string _newStudentName = string.Empty;
-
-        // --- Properties for redigering af eksamen ---
         [ObservableProperty]
         private bool _isEditingExam = false;
-        
         [ObservableProperty]
         private int _editingExamId;
-
         [ObservableProperty]
         private string _term = string.Empty;
         [ObservableProperty]
@@ -49,10 +41,8 @@ namespace MauiExamApp.ViewModels
         private int _examDurationMinutes;
         [ObservableProperty]
         private TimeSpan _startTime = DateTime.Now.TimeOfDay;
-
         [ObservableProperty]
         private string _formTitle = "Opret Ny Eksamen";
-        
         [ObservableProperty]
         private string _formButtonText = "Opret Eksamen";
 
@@ -60,11 +50,10 @@ namespace MauiExamApp.ViewModels
         {
             _databaseService = databaseService;
         }
-        
+
         public async Task OnAppearing()
         {
             await LoadUpcomingExamsAsync();
-            // RETTELSE: Fjernet kald til CancelEditExamAsync() herfra.
         }
 
         [RelayCommand]
@@ -74,10 +63,72 @@ namespace MauiExamApp.ViewModels
             UpcomingExams.Clear();
             foreach (var exam in exams.OrderBy(e => e.Date))
             {
-                UpcomingExams.Add(exam);
+                var examDisplay = new ExamDisplay(exam);
+                var students = await _databaseService.GetStudentsForExamAsync(exam.Id);
+                
+                examDisplay.StudentCount = students.Count;
+                examDisplay.CompletedStudentCount = students.Count(s => !string.IsNullOrEmpty(s.Grade));
+                
+                UpcomingExams.Add(examDisplay);
             }
         }
+        
+        [RelayCommand]
+        private void EditExam(ExamDisplay examDisplay)
+        {
+            if (examDisplay == null) return;
+            var exam = examDisplay.Exam;
+            
+            IsEditingExam = true;
+            EditingExamId = exam.Id;
+            FormTitle = "Rediger Eksamen";
+            FormButtonText = "Gem Ændringer";
+            Term = exam.Term;
+            CourseName = exam.CourseName;
+            Date = exam.Date;
+            StartTime = exam.StartTime;
+            NumberOfQuestions = exam.NumberOfQuestions;
+            ExamDurationMinutes = exam.ExamDurationMinutes;
+        }
+        
+        [RelayCommand]
+        private async Task DeleteExamAsync(ExamDisplay examDisplay)
+        {
+            if (examDisplay == null) return;
+            var exam = examDisplay.Exam;
+            
+            bool confirmed = await Shell.Current.DisplayAlert("Bekræft Sletning", $"Er du sikker på, du vil slette eksamen '{exam.CourseName}' og alle tilmeldte studerende?", "Ja, Slet", "Annuller");
+            if (confirmed)
+            {
+                await _databaseService.DeleteExamAsync(exam);
+                await LoadUpcomingExamsAsync();
+            }
+        }
+        
+        [RelayCommand]
+        private async Task ShowStudentPopupAsync(ExamDisplay examDisplay)
+        {
+            if (examDisplay == null) return;
+            var exam = examDisplay.Exam;
 
+            SelectedExam = exam;
+            var students = await _databaseService.GetStudentsForExamAsync(exam.Id);
+            StudentsForSelectedExam.Clear();
+            foreach (var s in students)
+            {
+                StudentsForSelectedExam.Add(s);
+            }
+            IsStudentPopupVisible = true;
+        }
+
+        [RelayCommand]
+        private async Task GoToExamAsync(ExamDisplay examDisplay)
+        {
+            if (examDisplay == null) return;
+            var exam = examDisplay.Exam;
+            await Shell.Current.GoToAsync($"{nameof(ExamView)}?ExamId={exam.Id}");
+        }
+        
         [RelayCommand]
         private async Task SaveExamAsync()
         {
@@ -97,7 +148,7 @@ namespace MauiExamApp.ViewModels
                 exam = new Exam();
             }
 
-            if(exam == null) return;
+            if (exam == null) return;
 
             exam.Term = Term;
             exam.CourseName = CourseName;
@@ -107,26 +158,8 @@ namespace MauiExamApp.ViewModels
             exam.StartTime = StartTime;
 
             await _databaseService.SaveExamAsync(exam);
-            CancelEditExam(); 
+            CancelEditExam();
             await LoadUpcomingExamsAsync();
-        }
-
-        [RelayCommand]
-        private void EditExam(Exam exam)
-        {
-            if (exam == null) return;
-
-            IsEditingExam = true;
-            EditingExamId = exam.Id;
-            FormTitle = "Rediger Eksamen";
-            FormButtonText = "Gem Ændringer";
-
-            Term = exam.Term;
-            CourseName = exam.CourseName;
-            Date = exam.Date;
-            StartTime = exam.StartTime;
-            NumberOfQuestions = exam.NumberOfQuestions;
-            ExamDurationMinutes = exam.ExamDurationMinutes;
         }
 
         [RelayCommand]
@@ -136,7 +169,6 @@ namespace MauiExamApp.ViewModels
             EditingExamId = 0;
             FormTitle = "Opret Ny Eksamen";
             FormButtonText = "Opret Eksamen";
-            
             Term = string.Empty;
             CourseName = string.Empty;
             Date = DateTime.Today;
@@ -144,39 +176,12 @@ namespace MauiExamApp.ViewModels
             ExamDurationMinutes = 0;
             StartTime = DateTime.Now.TimeOfDay;
         }
-
-        [RelayCommand]
-        private async Task DeleteExamAsync(Exam exam)
-        {
-            if (exam == null) return;
-            bool confirmed = await Shell.Current.DisplayAlert("Bekræft Sletning", $"Er du sikker på, du vil slette eksamen '{exam.CourseName}' og alle tilmeldte studerende?", "Ja, Slet", "Annuller");
-            if (confirmed)
-            {
-                await _databaseService.DeleteExamAsync(exam);
-                await LoadUpcomingExamsAsync();
-            }
-        }
         
-        [RelayCommand]
-        private async Task ShowStudentPopupAsync(Exam exam)
-        {
-            if (exam == null) return;
-            SelectedExam = exam;
-            var students = await _databaseService.GetStudentsForExamAsync(exam.Id);
-            StudentsForSelectedExam.Clear();
-            foreach (var s in students)
-            {
-                StudentsForSelectedExam.Add(s);
-            }
-            IsStudentPopupVisible = true;
-        }
-
         [RelayCommand]
         private void HideStudentPopup()
         {
             IsStudentPopupVisible = false;
         }
-
 
         [RelayCommand]
         private async Task AddStudentAsync()
@@ -195,17 +200,16 @@ namespace MauiExamApp.ViewModels
             };
 
             await _databaseService.SaveStudentAsync(newStudent);
-            
+
             var students = await _databaseService.GetStudentsForExamAsync(SelectedExam.Id);
             StudentsForSelectedExam.Clear();
-             foreach (var s in students)
+            foreach (var s in students)
             {
                 StudentsForSelectedExam.Add(s);
             }
             NewStudentName = string.Empty;
             NewStudentNumber = string.Empty;
         }
-
 
         [RelayCommand]
         private async Task DeleteStudentAsync(Student student)
@@ -217,13 +221,6 @@ namespace MauiExamApp.ViewModels
                 await _databaseService.DeleteStudentAsync(student);
                 StudentsForSelectedExam.Remove(student);
             }
-        }
-        
-        [RelayCommand]
-        private async Task GoToExamAsync(Exam exam)
-        {
-            if (exam == null) return;
-            await Shell.Current.GoToAsync($"{nameof(ExamView)}?ExamId={exam.Id}");
         }
     }
 }

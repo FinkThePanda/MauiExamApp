@@ -6,95 +6,78 @@
              x:DataType="viewModels:DashboardViewModel"
              x:Class="MauiExamApp.Views.DashboardView"
              Title="Dashboard">
-    <Grid>
-        <!-- Primært indhold -->
-        <ScrollView>
-            <VerticalStackLayout Spacing="15" Padding="15">
-
-                <!-- Rediger/Opret Eksamen Formular -->
-                <Border Padding="10" Stroke="LightGray" StrokeThickness="1">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="10"/>
-                    </Border.StrokeShape>
-                    <VerticalStackLayout Spacing="10">
-                        <Grid ColumnDefinitions="*,Auto">
-                            <Label Grid.Column="0" Text="{Binding FormTitle}" FontSize="Large" FontAttributes="Bold" VerticalOptions="Center"/>
-                            <Button Grid.Column="1" Text="Annuller" Command="{Binding CancelEditExamCommand}" IsVisible="{Binding IsEditingExam}"/>
-                        </Grid>
-                        
-                        <Entry Placeholder="Eksamenstermin (f.eks. 'sommer 25')" Text="{Binding Term}"/>
-                        <Entry Placeholder="Kursusnavn" Text="{Binding CourseName}"/>
-                        <DatePicker Date="{Binding Date}"/>
-                        <TimePicker Time="{Binding StartTime}" />
-                        <Entry Placeholder="Antal Spørgsmål" Keyboard="Numeric" Text="{Binding NumberOfQuestions}"/>
-                        <Entry Placeholder="Eksamenstid (minutter)" Keyboard="Numeric" Text="{Binding ExamDurationMinutes}"/>
-                        
-                        <Button Text="{Binding FormButtonText}" Command="{Binding SaveExamCommand}"/>
+    <Grid ColumnDefinitions="600, *">
+        <!-- Left Column: Create/Edit Exam Form -->
+        <Border Grid.Column="0" Padding="20" Margin="15" Stroke="LightGray" StrokeThickness="1" HorizontalOptions="Center" VerticalOptions="Start" WidthRequest="500">
+            <Border.StrokeShape><RoundRectangle CornerRadius="10"/></Border.StrokeShape>
+            <VerticalStackLayout Spacing="35">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Grid.Column="0" Text="{Binding FormTitle}" FontSize="Large" FontAttributes="Bold" VerticalOptions="Center"/>
+                    <Button Grid.Column="1" Text="Annuller" Command="{Binding CancelEditExamCommand}" IsVisible="{Binding IsEditingExam}"/>
+                </Grid>
+                <Entry Placeholder="Eksamenstermin..." Text="{Binding Term}"/>
+                <Entry Placeholder="Kursusnavn..." Text="{Binding CourseName}"/>
+                <DatePicker Date="{Binding Date}"/>
+                <TimePicker Time="{Binding StartTime}" />
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <VerticalStackLayout Grid.Column="0">
+                        <Label Text="Antal Spørgsmål" FontSize="Micro"/>
+                        <Entry Keyboard="Numeric" Text="{Binding NumberOfQuestions}"/>
                     </VerticalStackLayout>
-                </Border>
-                
-                <!-- Liste over Kommende Eksamener -->
-                <Label Text="Kommende Eksamener" FontSize="Large" FontAttributes="Bold" Margin="0,20,0,0"/>
-                <CollectionView ItemsSource="{Binding UpcomingExams}">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="models:Exam">
-                            <Border Padding="15" Margin="0,5" Stroke="LightGray" StrokeThickness="1">
-                                <Border.StrokeShape>
-                                    <RoundRectangle CornerRadius="10"/>
-                                </Border.StrokeShape>
-                                <Grid RowSpacing="10">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    
-                                    <Label Grid.Row="0" Grid.Column="0" Text="{Binding CourseName}" FontSize="Medium" FontAttributes="Bold"/>
-                                    <Label Grid.Row="1" Grid.Column="0" Text="{Binding Term}" FontAttributes="Italic"/>
-                                    <Label Grid.Row="2" Grid.Column="0" Text="{Binding Date, StringFormat='{0:d. MMMM yyyy}'}"/>
+                    <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Eksamenstid (minutter)" FontSize="Micro"/>
+                            <Entry Keyboard="Numeric" Text="{Binding ExamDurationMinutes}"/>
+                    </VerticalStackLayout>
+                </Grid>
+                <Button Text="{Binding FormButtonText}" Command="{Binding SaveExamCommand}"/>
+            </VerticalStackLayout>
+        </Border>
 
-                                    <VerticalStackLayout Grid.Row="0" Grid.RowSpan="3" Grid.Column="1" Spacing="5" VerticalOptions="Center">
-                                        <Button Text="Start" Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:DashboardViewModel}}, Path=GoToExamCommand}" CommandParameter="{Binding .}"/>
-                                        <Button Text="Studerende" Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:DashboardViewModel}}, Path=ShowStudentPopupCommand}" CommandParameter="{Binding .}"/>
-                                        <Button Text="Rediger" Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:DashboardViewModel}}, Path=EditExamCommand}" CommandParameter="{Binding .}"/>
-                                        <Button Text="Slet" Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:DashboardViewModel}}, Path=DeleteExamCommand}" CommandParameter="{Binding .}" BackgroundColor="Red"/>
-                                    </VerticalStackLayout>
-                                </Grid>
+        <!-- Right Column: Upcoming Exams List -->
+        <Grid Grid.Column="1" RowDefinitions="Auto, *" Padding="15" RowSpacing="15">
+            <Label Grid.Row="0" Text="Kommende Eksamener" FontSize="Header" FontAttributes="Bold" Padding="5,0"/>
+            <ScrollView Grid.Row="1">
+                <CollectionView ItemsSource="{Binding UpcomingExams}">
+                    <CollectionView.ItemsLayout>
+                        <GridItemsLayout Orientation="Vertical" Span="1" VerticalItemSpacing="10"/>
+                    </CollectionView.ItemsLayout>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:ExamDisplay">
+                            <Border Style="{StaticResource ExamCardStyle}">
+                                <VerticalStackLayout Spacing="10">
+                                    <Label Text="{Binding Exam.CourseName}" FontSize="Medium" FontAttributes="Bold"/>
+                                    <Label Text="{Binding Exam.Term}" FontAttributes="Italic"/>
+                                    <Label Text="{Binding Exam.Date, StringFormat='{0:d. MMMM}'}" TextColor="Gray"/>
+                                    <BoxView HeightRequest="1" Color="LightGray" Margin="0,5"/>
+                                    
+                                    <Label Text="{Binding FullStatusText}" FontSize="Small" FontAttributes="Bold"/>
+                                    
+                                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="5" RowSpacing="5" Margin="0,10,0,0">
+                                        <Button Grid.Row="0" Grid.Column="0" Text="Start" Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:DashboardViewModel}}, Path=GoToExamCommand}" CommandParameter="{Binding .}" Padding="8" FontSize="12" HeightRequest="40" WidthRequest="200"/>
+                                        <Button Grid.Row="0" Grid.Column="1" Text="Elever" Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:DashboardViewModel}}, Path=ShowStudentPopupCommand}" CommandParameter="{Binding .}" Padding="8" FontSize="12" HeightRequest="40" WidthRequest="200"/>
+                                        <Button Grid.Row="1" Grid.Column="0" Text="Rediger" Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:DashboardViewModel}}, Path=EditExamCommand}" CommandParameter="{Binding .}" Padding="8" FontSize="12" HeightRequest="40" WidthRequest="200"/>
+                                        <Button Grid.Row="1" Grid.Column="1" Text="Slet" Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:DashboardViewModel}}, Path=DeleteExamCommand}" CommandParameter="{Binding .}" BackgroundColor="Red" Padding="8" FontSize="12" HeightRequest="40" WidthRequest="200"/>
+                                    </Grid>
+                                </VerticalStackLayout>
                             </Border>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
+            </ScrollView>
+        </Grid>
 
-            </VerticalStackLayout>
-        </ScrollView>
-
-        <!-- Pop-up for Studerende -->
-        <Border Stroke="#DDDDDD" StrokeThickness="1" BackgroundColor="#AA000000"
-                IsVisible="{Binding IsStudentPopupVisible}" ZIndex="1">
-            <Border VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="340" Padding="0" BackgroundColor="White">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="10"/>
-                </Border.StrokeShape>
+        <!-- Student Popup -->
+        <Border Grid.ColumnSpan="2" Stroke="#DDDDDD" StrokeThickness="1" BackgroundColor="#AA000000" IsVisible="{Binding IsStudentPopupVisible}" ZIndex="1">
+             <Border VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="340" Padding="0" BackgroundColor="White">
+                <Border.StrokeShape><RoundRectangle CornerRadius="10"/></Border.StrokeShape>
                 <VerticalStackLayout>
-                    <!-- Header -->
                     <Grid Padding="15" ColumnSpacing="10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
                         <Label Grid.Column="0" Text="Tilmeldte Studerende" FontSize="Medium" FontAttributes="Bold" VerticalOptions="Center"/>
                         <Button Grid.Column="1" Text="X" FontSize="Medium" Command="{Binding HideStudentPopupCommand}" Padding="10,5"/>
                     </Grid>
-                    
                     <BoxView HeightRequest="1" Color="LightGray"/>
-
-                    <!-- Liste og Tilføj Formular -->
                     <VerticalStackLayout Padding="15" Spacing="15">
-                        <!-- Liste over studerende -->
                         <CollectionView ItemsSource="{Binding StudentsForSelectedExam}" HeightRequest="150">
                             <CollectionView.ItemTemplate>
                                 <DataTemplate x:DataType="models:Student">
@@ -109,10 +92,7 @@
                                 </DataTemplate>
                             </CollectionView.ItemTemplate>
                         </CollectionView>
-                        
                         <BoxView HeightRequest="1" Color="LightGray"/>
-
-                        <!-- Tilføj ny studerende -->
                         <Label Text="Tilføj Ny Studerende" FontAttributes="Bold"/>
                         <Entry Placeholder="Studienummer" Text="{Binding NewStudentNumber}"/>
                         <Entry Placeholder="Fulde Navn" Text="{Binding NewStudentName}"/>
