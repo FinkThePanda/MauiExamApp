@@ -31,6 +31,8 @@ namespace MauiExamApp
             builder.Services.AddTransient<DashboardViewModel>();
             builder.Services.AddTransient<DashboardView>();
 
+            builder.Services.AddTransient<ExamFormViewModel>();
+
             builder.Services.AddTransient<ExamViewModel>();
             builder.Services.AddTransient<ExamView>();
 

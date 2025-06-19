@@ -13,24 +13,24 @@
             <Border.StrokeShape><RoundRectangle CornerRadius="10"/></Border.StrokeShape>
             <VerticalStackLayout Spacing="35">
                 <Grid ColumnDefinitions="*,Auto">
-                    <Label Grid.Column="0" Text="{Binding FormTitle}" FontSize="Large" FontAttributes="Bold" VerticalOptions="Center"/>
-                    <Button Grid.Column="1" Text="Annuller" Command="{Binding CancelEditExamCommand}" IsVisible="{Binding IsEditingExam}"/>
+                    <Label Grid.Column="0" Text="{Binding ExamFormViewModel.FormTitle}" FontSize="Large" FontAttributes="Bold" VerticalOptions="Center"/>
+                    <Button Grid.Column="1" Text="Annuller" Command="{Binding ExamFormViewModel.CancelCommand}" IsVisible="{Binding ExamFormViewModel.IsEditingExam}"/>
                 </Grid>
-                <Entry Placeholder="Eksamenstermin..." Text="{Binding Term}"/>
-                <Entry Placeholder="Kursusnavn..." Text="{Binding CourseName}"/>
-                <DatePicker Date="{Binding Date}"/>
-                <TimePicker Time="{Binding StartTime}" />
+                <Entry Placeholder="Eksamenstermin..." Text="{Binding ExamFormViewModel.Term}"/>
+                <Entry Placeholder="Kursusnavn..." Text="{Binding ExamFormViewModel.CourseName}"/>
+                <DatePicker Date="{Binding ExamFormViewModel.Date}"/>
+                <TimePicker Time="{Binding ExamFormViewModel.StartTime}" />
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                     <VerticalStackLayout Grid.Column="0">
                         <Label Text="Antal Spørgsmål" FontSize="Micro"/>
-                        <Entry Keyboard="Numeric" Text="{Binding NumberOfQuestions}"/>
+                        <Entry Keyboard="Numeric" Text="{Binding ExamFormViewModel.NumberOfQuestions}"/>
                     </VerticalStackLayout>
                     <VerticalStackLayout Grid.Column="1">
                             <Label Text="Eksamenstid (minutter)" FontSize="Micro"/>
-                            <Entry Keyboard="Numeric" Text="{Binding ExamDurationMinutes}"/>
+                            <Entry Keyboard="Numeric" Text="{Binding ExamFormViewModel.ExamDurationMinutes}"/>
                     </VerticalStackLayout>
                 </Grid>
-                <Button Text="{Binding FormButtonText}" Command="{Binding SaveExamCommand}"/>
+                <Button Text="{Binding ExamFormViewModel.FormButtonText}" Command="{Binding ExamFormViewModel.SaveExamCommand}"/>
             </VerticalStackLayout>
         </Border>
 
