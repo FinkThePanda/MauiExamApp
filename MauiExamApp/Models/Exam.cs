@@ -6,8 +6,8 @@ namespace MauiExamApp.Models
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
-        public string Term { get; set; }
-        public string CourseName { get; set; }
+        public string Term { get; set; } = string.Empty;
+        public string CourseName { get; set; } = string.Empty;
         public DateTime Date { get; set; }
         public int NumberOfQuestions { get; set; }
         public int ExamDurationMinutes { get; set; }
@@ -16,4 +16,3 @@ namespace MauiExamApp.Models
         public int CurrentStudentIndex { get; set; } = 0;
     }
 }
-

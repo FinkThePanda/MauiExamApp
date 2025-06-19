@@ -12,11 +12,14 @@
             <VerticalStackLayout Spacing="15" Padding="15">
 
                 <!-- Rediger/Opret Eksamen Formular -->
-                <Frame Padding="10" CornerRadius="10" BorderColor="LightGray">
+                <Border Padding="10" Stroke="LightGray" StrokeThickness="1">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="10"/>
+                    </Border.StrokeShape>
                     <VerticalStackLayout Spacing="10">
                         <Grid ColumnDefinitions="*,Auto">
                             <Label Grid.Column="0" Text="{Binding FormTitle}" FontSize="Large" FontAttributes="Bold" VerticalOptions="Center"/>
-                            <Button Grid.Column="1" Text="Annuller Redigering" Command="{Binding CancelEditExamCommand}" IsVisible="{Binding IsEditingExam}"/>
+                            <Button Grid.Column="1" Text="Annuller" Command="{Binding CancelEditExamCommand}" IsVisible="{Binding IsEditingExam}"/>
                         </Grid>
                         
                         <Entry Placeholder="Eksamenstermin (f.eks. 'sommer 25')" Text="{Binding Term}"/>
@@ -28,14 +31,17 @@
                         
                         <Button Text="{Binding FormButtonText}" Command="{Binding SaveExamCommand}"/>
                     </VerticalStackLayout>
-                </Frame>
+                </Border>
                 
                 <!-- Liste over Kommende Eksamener -->
                 <Label Text="Kommende Eksamener" FontSize="Large" FontAttributes="Bold" Margin="0,20,0,0"/>
                 <CollectionView ItemsSource="{Binding UpcomingExams}">
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="models:Exam">
-                            <Frame Padding="15" CornerRadius="10" Margin="0,5" BorderColor="LightGray">
+                            <Border Padding="15" Margin="0,5" Stroke="LightGray" StrokeThickness="1">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="10"/>
+                                </Border.StrokeShape>
                                 <Grid RowSpacing="10">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
@@ -49,7 +55,7 @@
                                     
                                     <Label Grid.Row="0" Grid.Column="0" Text="{Binding CourseName}" FontSize="Medium" FontAttributes="Bold"/>
                                     <Label Grid.Row="1" Grid.Column="0" Text="{Binding Term}" FontAttributes="Italic"/>
-                                    <Label Grid.Row="2" Grid.Column="0" Text="{Binding Date, StringFormat='{0:d. MMMM}'}"/>
+                                    <Label Grid.Row="2" Grid.Column="0" Text="{Binding Date, StringFormat='{0:d. MMMM yyyy}'}"/>
 
                                     <VerticalStackLayout Grid.Row="0" Grid.RowSpan="3" Grid.Column="1" Spacing="5" VerticalOptions="Center">
                                         <Button Text="Start" Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:DashboardViewModel}}, Path=GoToExamCommand}" CommandParameter="{Binding .}"/>
@@ -58,7 +64,7 @@
                                         <Button Text="Slet" Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:DashboardViewModel}}, Path=DeleteExamCommand}" CommandParameter="{Binding .}" BackgroundColor="Red"/>
                                     </VerticalStackLayout>
                                 </Grid>
-                            </Frame>
+                            </Border>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
@@ -69,7 +75,10 @@
         <!-- Pop-up for Studerende -->
         <Border Stroke="#DDDDDD" StrokeThickness="1" BackgroundColor="#AA000000"
                 IsVisible="{Binding IsStudentPopupVisible}" ZIndex="1">
-            <Frame VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="340" Padding="0" CornerRadius="10">
+            <Border VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="340" Padding="0" BackgroundColor="White">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="10"/>
+                </Border.StrokeShape>
                 <VerticalStackLayout>
                     <!-- Header -->
                     <Grid Padding="15" ColumnSpacing="10">
@@ -110,7 +119,7 @@
                         <Button Text="Tilføj Studerende" Command="{Binding AddStudentCommand}"/>
                     </VerticalStackLayout>
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
         </Border>
     </Grid>
 </ContentPage>
