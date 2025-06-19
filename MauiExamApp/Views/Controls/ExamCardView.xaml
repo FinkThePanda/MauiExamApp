@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:MauiExamApp.Models"
+             x:Class="MauiExamApp.Views.Controls.ExamCardView"
+             x:Name="this">
+
+    <Border Style="{StaticResource ExamCardStyle}">
+        <VerticalStackLayout Spacing="10">
+            <!-- Common Info Section -->
+            <Label Text="{Binding Source={x:Reference this}, Path=ExamDisplay.Exam.CourseName}" FontSize="Medium" FontAttributes="Bold"/>
+            <Label Text="{Binding Source={x:Reference this}, Path=ExamDisplay.Exam.Term}" FontAttributes="Italic"/>
+            <Label Text="{Binding Source={x:Reference this}, Path=ExamDisplay.Exam.Date, StringFormat='{0:d. MMMM}'}" TextColor="Gray"/>
+            <BoxView HeightRequest="1" Color="LightGray" Margin="0,5"/>
+
+            <!-- Dashboard Card Content -->
+            <VerticalStackLayout IsVisible="{Binding Source={x:Reference this}, Path=IsHistoryCard, Converter={StaticResource InvertedBoolConverter}}">
+                <Label Text="{Binding Source={x:Reference this}, Path=ExamDisplay.FullStatusText}" FontSize="Small" FontAttributes="Bold"/>
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="5" RowSpacing="5" Margin="0,10,0,0">
+                    <Button Grid.Row="0" Grid.Column="0" Text="Start" Command="{Binding Source={x:Reference this}, Path=GoToExamCommand}" CommandParameter="{Binding Source={x:Reference this}, Path=ExamDisplay}" Padding="8" FontSize="12" HeightRequest="40" WidthRequest="200"/>
+                    <Button Grid.Row="0" Grid.Column="1" Text="Elever" Command="{Binding Source={x:Reference this}, Path=ShowStudentPopupCommand}" CommandParameter="{Binding Source={x:Reference this}, Path=ExamDisplay}" Padding="8" FontSize="12" HeightRequest="40" WidthRequest="200"/>
+                    <Button Grid.Row="1" Grid.Column="0" Text="Rediger" Command="{Binding Source={x:Reference this}, Path=EditExamCommand}" CommandParameter="{Binding Source={x:Reference this}, Path=ExamDisplay}" Padding="8" FontSize="12" HeightRequest="40" WidthRequest="200"/>
+                    <Button Grid.Row="1" Grid.Column="1" Text="Slet" Command="{Binding Source={x:Reference this}, Path=DeleteExamCommand}" CommandParameter="{Binding Source={x:Reference this}, Path=ExamDisplay}" BackgroundColor="Red" Padding="8" FontSize="12" HeightRequest="40" WidthRequest="200"/>
+                </Grid>
+            </VerticalStackLayout>
+
+            <!-- History Card Content -->
+            <Grid IsVisible="{Binding Source={x:Reference this}, Path=IsHistoryCard}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <VerticalStackLayout VerticalOptions="Center">
+                    <Label Text="{Binding Source={x:Reference this}, Path=ExamDisplay.StudentCount, StringFormat='Tilmeldte studerende: {0}'}" />
+                </VerticalStackLayout>
+                <Button Grid.Column="1" 
+                        Text="Se Detaljer" 
+                        VerticalOptions="Center"
+                        Command="{Binding Source={x:Reference this}, Path=ShowDetailsCommand}" 
+                        CommandParameter="{Binding Source={x:Reference this}, Path=ExamDisplay}"/>
+            </Grid>
+        </VerticalStackLayout>
+    </Border>
+</ContentView>

@@ -165,7 +165,7 @@ namespace MauiExamApp.ViewModels
 
         private void SetupTimer()
         {
-            if (_timer != null) return;
+            if (_timer != null || Application.Current is null) return;
             _timer = Application.Current.Dispatcher.CreateTimer();
             _timer.Interval = TimeSpan.FromSeconds(1);
             _timer.Tick += async (s, e) =>

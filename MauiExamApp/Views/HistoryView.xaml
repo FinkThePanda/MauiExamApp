@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodels="clr-namespace:MauiExamApp.ViewModels"
              xmlns:models="clr-namespace:MauiExamApp.Models"
+             xmlns:controls="clr-namespace:MauiExamApp.Views.Controls"
              x:DataType="viewmodels:HistoryViewModel"
              x:Class="MauiExamApp.Views.HistoryView"
              Title="Historik">
@@ -36,24 +37,10 @@
             </CollectionView.ItemsLayout>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:ExamDisplay">
-                    <Border Style="{StaticResource ExamCardStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <VerticalStackLayout VerticalOptions="Center">
-                                <Label Text="{Binding Exam.CourseName}" FontAttributes="Bold" />
-                                <Label Text="{Binding Exam.Date, StringFormat='Dato: {0:d.M.yyyy}'}" />
-                                <Label Text="{Binding StudentCount, StringFormat='Tilmeldte studerende: {0}'}" />
-                            </VerticalStackLayout>
-                            <Button Grid.Column="1" 
-                                    Text="Se Detaljer" 
-                                    VerticalOptions="Center"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:HistoryViewModel}}, Path=ShowDetailsCommand}" 
-                                    CommandParameter="{Binding .}"/>
-                        </Grid>
-                    </Border>
+                    <controls:ExamCardView 
+                        ExamDisplay="{Binding .}"
+                        IsHistoryCard="True"
+                        ShowDetailsCommand="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:HistoryViewModel}}, Path=ShowDetailsCommand}" />
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

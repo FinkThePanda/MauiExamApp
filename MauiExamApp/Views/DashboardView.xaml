@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:models="clr-namespace:MauiExamApp.Models"
              xmlns:viewModels="clr-namespace:MauiExamApp.ViewModels"
+             xmlns:controls="clr-namespace:MauiExamApp.Views.Controls"
              x:DataType="viewModels:DashboardViewModel"
              x:Class="MauiExamApp.Views.DashboardView"
              Title="Dashboard">
@@ -44,23 +45,13 @@
 
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="models:ExamDisplay">
-                            <Border Style="{StaticResource ExamCardStyle}">
-                                <VerticalStackLayout Spacing="10">
-                                    <Label Text="{Binding Exam.CourseName}" FontSize="Medium" FontAttributes="Bold"/>
-                                    <Label Text="{Binding Exam.Term}" FontAttributes="Italic"/>
-                                    <Label Text="{Binding Exam.Date, StringFormat='{0:d. MMMM}'}" TextColor="Gray"/>
-                                    <BoxView HeightRequest="1" Color="LightGray" Margin="0,5"/>
-                                    
-                                    <Label Text="{Binding FullStatusText}" FontSize="Small" FontAttributes="Bold"/>
-                                    
-                                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="5" RowSpacing="5" Margin="0,10,0,0">
-                                        <Button Grid.Row="0" Grid.Column="0" Text="Start" Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:DashboardViewModel}}, Path=GoToExamCommand}" CommandParameter="{Binding .}" Padding="8" FontSize="12" HeightRequest="40" WidthRequest="200"/>
-                                        <Button Grid.Row="0" Grid.Column="1" Text="Elever" Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:DashboardViewModel}}, Path=ShowStudentPopupCommand}" CommandParameter="{Binding .}" Padding="8" FontSize="12" HeightRequest="40" WidthRequest="200"/>
-                                        <Button Grid.Row="1" Grid.Column="0" Text="Rediger" Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:DashboardViewModel}}, Path=EditExamCommand}" CommandParameter="{Binding .}" Padding="8" FontSize="12" HeightRequest="40" WidthRequest="200"/>
-                                        <Button Grid.Row="1" Grid.Column="1" Text="Slet" Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:DashboardViewModel}}, Path=DeleteExamCommand}" CommandParameter="{Binding .}" BackgroundColor="Red" Padding="8" FontSize="12" HeightRequest="40" WidthRequest="200"/>
-                                    </Grid>
-                                </VerticalStackLayout>
-                            </Border>
+                            <controls:ExamCardView 
+                                ExamDisplay="{Binding .}"
+                                IsHistoryCard="False"
+                                GoToExamCommand="{Binding Source={RelativeSource AncestorType={x:Type viewModels:DashboardViewModel}}, Path=GoToExamCommand}"
+                                ShowStudentPopupCommand="{Binding Source={RelativeSource AncestorType={x:Type viewModels:DashboardViewModel}}, Path=ShowStudentPopupCommand}"
+                                EditExamCommand="{Binding Source={RelativeSource AncestorType={x:Type viewModels:DashboardViewModel}}, Path=EditExamCommand}"
+                                DeleteExamCommand="{Binding Source={RelativeSource AncestorType={x:Type viewModels:DashboardViewModel}}, Path=DeleteExamCommand}" />
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
