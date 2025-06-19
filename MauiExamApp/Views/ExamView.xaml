@@ -1,14 +1,67 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:viewModels="clr-namespace:MauiExamApp.ViewModels"
-             x:DataType="viewModels:ExamViewModel"
+             xmlns:viewmodels="clr-namespace:MauiExamApp.ViewModels"
+             xmlns:converters="clr-namespace:MauiExamApp.Converters"
+             x:DataType="viewmodels:ExamViewModel"
              x:Class="MauiExamApp.Views.ExamView"
-             Title="Eksamen">
-    <VerticalStackLayout>
-        <Label
-            Text="Eksamen er i gang!"
-            VerticalOptions="Center"
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+             Title="{Binding CurrentExam.CourseName}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="15" Padding="20">
+
+            <!-- Viser hvis eksamen er færdig -->
+            <VerticalStackLayout IsVisible="{Binding IsExamFinished}" Spacing="10">
+                <Label Text="Eksamen er færdig!" FontSize="Header" HorizontalOptions="Center"/>
+                <Label Text="Alle studerende er blevet eksamineret." HorizontalOptions="Center"/>
+                <Button Text="Afslut og gå til Dashboard" Command="{Binding FinishExamAndGoBackCommand}"/>
+            </VerticalStackLayout>
+
+            <!-- Viser under eksamination -->
+            <VerticalStackLayout IsVisible="{Binding IsExamFinished, Converter={StaticResource InvertedBoolConverter}}" Spacing="20">
+                <!-- Info om studerende -->
+                <Frame>
+                    <VerticalStackLayout>
+                        <Label Text="Eksaminand:" FontSize="Small" TextColor="Gray"/>
+                        <Label Text="{Binding CurrentStudent.FullName}" FontSize="Title" FontAttributes="Bold"/>
+                        <Label Text="{Binding CurrentStudent.StudentNumber}" FontSize="Subtitle"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Træk Spørgsmål -->
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Grid.Column="0" Text="{Binding DrawnQuestion, StringFormat='Trukket Spørgsmål: {0}'}" FontSize="Large" VerticalOptions="Center"/>
+                    <Button Grid.Column="1" Text="Træk Spørgsmål" Command="{Binding DrawQuestionCommand}"/>
+                </Grid>
+
+                <!-- Timer -->
+                <Frame Padding="15">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="{Binding TimerText}" FontSize="50" HorizontalOptions="Center" FontAttributes="Bold"/>
+                        <ProgressBar Progress="{Binding TimeProgress}"/>
+                        <Grid ColumnDefinitions="*,*">
+                            <Button Grid.Column="0" Text="Start Eksamination" Command="{Binding StartExaminationCommand}" IsEnabled="{Binding IsTimerRunning, Converter={StaticResource InvertedBoolConverter}}"/>
+                            <Button Grid.Column="1" Text="Slut Eksamination" Command="{Binding StopExaminationCommand}" IsEnabled="{Binding IsTimerRunning}"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Noter og Karakter -->
+                <Grid RowDefinitions="*,Auto" RowSpacing="10">
+                    <Editor Grid.Row="0" Placeholder="Indtast noter her..." Text="{Binding Notes}" HeightRequest="150"/>
+                    <Picker Grid.Row="1" Title="Vælg Karakter" ItemsSource="{Binding Grades}" SelectedItem="{Binding SelectedGrade}"/>
+                </Grid>
+
+                <!-- Næste studerende -->
+                <Button Text="Gem og Næste Studerende" Command="{Binding SaveAndNextStudentCommand}" FontSize="Large" Margin="0,20,0,0"/>
+
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

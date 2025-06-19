@@ -2,6 +2,7 @@
 using MauiExamApp.Services; // Tilføj denne
 using MauiExamApp.ViewModels; // Tilføj denne
 using MauiExamApp.Views; // Tilføj denne
+using Plugin.Maui.Audio; // Tilføj denne using
 
 namespace MauiExamApp
 {
@@ -35,6 +36,9 @@ namespace MauiExamApp
 
             builder.Services.AddTransient<HistoryViewModel>();
             builder.Services.AddTransient<HistoryView>();
+
+            //* Tilføj lyd til eksamen
+            builder.Services.AddSingleton(AudioManager.Current);
 
             return builder.Build();
         }

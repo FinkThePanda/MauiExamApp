@@ -4,12 +4,19 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:MauiExamApp.Views"
-    Shell.FlyoutBehavior="Disabled"
     Title="MauiExamApp">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate views:DashboardView}"
-        Route="DashboardView" />
+    <TabBar>
+        <ShellContent
+            Title="Dashboard"
+            Icon="dashboard_icon.png"
+            ContentTemplate="{DataTemplate views:DashboardView}" />
+
+        <ShellContent
+            Title="Historik"
+            Icon="history_icon.png"
+            ContentTemplate="{DataTemplate views:HistoryView}" />
+    </TabBar>
 
 </Shell>
+

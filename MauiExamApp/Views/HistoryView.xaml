@@ -1,14 +1,100 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:viewModels="clr-namespace:MauiExamApp.ViewModels"
-             x:DataType="viewModels:HistoryViewModel"
+             xmlns:models="clr-namespace:MauiExamApp.Models"
+             xmlns:viewmodels="clr-namespace:MauiExamApp.ViewModels"
+             x:DataType="viewmodels:HistoryViewModel"
              x:Class="MauiExamApp.Views.HistoryView"
              Title="Historik">
-    <VerticalStackLayout>
-        <Label
-            Text="Se tidligere eksamener her!"
-            VerticalOptions="Center"
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+    <Grid>
+        <!-- Primært Indhold -->
+        <ScrollView>
+            <VerticalStackLayout Spacing="15" Padding="15">
+                
+                <!-- Filtrerings-kontroller -->
+                <Frame Padding="10" CornerRadius="10" BorderColor="LightGray">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Filtre" FontAttributes="Bold"/>
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
+                            <Picker Grid.Row="0" Grid.Column="0" Title="Vælg Kursus" 
+                                    ItemsSource="{Binding CourseFilterOptions}" 
+                                    SelectedItem="{Binding SelectedCourseFilter}"/>
+                            <Picker Grid.Row="0" Grid.Column="1" Title="Vælg Termin" 
+                                    ItemsSource="{Binding TermFilterOptions}"
+                                    SelectedItem="{Binding SelectedTermFilter}"/>
+                            <Picker Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Title="Sortér efter" 
+                                    ItemsSource="{Binding SortOrderOptions}"
+                                    SelectedItem="{Binding SelectedSortOrder}"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Frame>
+                
+                <Label Text="Afsluttede Eksamener" FontSize="Large" FontAttributes="Bold" Margin="0,15,0,0"/>
+                
+                <CollectionView ItemsSource="{Binding CompletedExams}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:Exam">
+                            <Frame Padding="15" CornerRadius="10" Margin="0,5" BorderColor="LightGray">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer 
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:HistoryViewModel}}, Path=ShowDetailsPopupCommand}" 
+                                        CommandParameter="{Binding .}"/>
+                                </Frame.GestureRecognizers>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <VerticalStackLayout Grid.Column="0">
+                                        <Label Text="{Binding CourseName}" FontSize="Medium" FontAttributes="Bold"/>
+                                        <Label Text="{Binding Term}"/>
+                                        <!-- RETTELSE HER -->
+                                        <Label Text="{Binding Date, StringFormat='{0:d. MMMM yyyy}'}" TextColor="Gray"/>
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="1" Text="Se Detaljer >" VerticalOptions="Center"/>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Pop-up for Detaljer (uændret fra forrige trin) -->
+        <Border Stroke="#DDDDDD" StrokeThickness="1" BackgroundColor="#AA000000"
+                IsVisible="{Binding IsDetailsPopupVisible}" ZIndex="1">
+            <Frame VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="340" Padding="0" CornerRadius="10">
+                <VerticalStackLayout>
+                    <!-- Header -->
+                    <Grid Padding="15" ColumnSpacing="10">
+                        <VerticalStackLayout Grid.Column="0">
+                             <Label Text="{Binding SelectedExam.CourseName}" FontSize="Medium" FontAttributes="Bold"/>
+                             <Label Text="{Binding AverageGrade}" FontSize="Small"/>
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1" Text="X" Command="{Binding HideDetailsPopupCommand}" Padding="10,5" HorizontalOptions="End"/>
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="LightGray"/>
+
+                    <!-- Liste over studerende -->
+                    <ScrollView Padding="15" HeightRequest="400">
+                        <CollectionView ItemsSource="{Binding StudentsForSelectedExam}">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="models:Student">
+                                    <Frame Padding="10" Margin="0,5" BorderColor="LightGray" CornerRadius="5">
+                                        <VerticalStackLayout Spacing="5">
+                                            <Label Text="{Binding FullName, StringFormat='Navn: {0}'}" FontAttributes="Bold"/>
+                                            <Label Text="{Binding StudentNumber, StringFormat='Studienr: {0}'}"/>
+                                            <Label Text="{Binding Grade, StringFormat='Karakter: {0}'}"/>
+                                            <Label Text="{Binding QuestionNumber, StringFormat='Spørgsmål: {0}'}"/>
+                                            <Label Text="{Binding Notes, StringFormat='Noter: {0}'}" MaxLines="3"/>
+                                        </VerticalStackLayout>
+                                    </Frame>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </ScrollView>
+                </VerticalStackLayout>
+            </Frame>
+        </Border>
+    </Grid>
 </ContentPage>

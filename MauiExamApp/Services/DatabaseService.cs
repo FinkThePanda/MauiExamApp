@@ -20,54 +20,34 @@ namespace MauiExamApp.Services
             _isInitialized = true;
         }
 
-        // Exam Methods
-        public async Task<List<Exam>> GetExamsAsync(bool completed)
+        // Exam Methods (Get/Save er uændrede)
+        public async Task<List<Exam>> GetExamsAsync(bool completed) { /* ... */ }
+        public async Task<Exam> GetExamAsync(int id) { /* ... */ }
+        public async Task<int> SaveExamAsync(Exam exam) { /* ... */ }
+
+        // NY METODE: Slet eksamen og alle tilhørende studerende
+        public async Task<int> DeleteExamAsync(Exam exam)
         {
             await InitializeAsync();
-            return await _database.Table<Exam>().Where(e => e.IsCompleted == completed).ToListAsync();
+            // Slet først alle studerende tilknyttet denne eksamen
+            var students = await GetStudentsForExamAsync(exam.Id);
+            foreach (var student in students)
+            {
+                await _database.DeleteAsync(student);
+            }
+            // Slet derefter selve eksamen
+            return await _database.DeleteAsync(exam);
         }
 
-        public async Task<Exam> GetExamAsync(int id)
-        {
-            await InitializeAsync();
-            return await _database.Table<Exam>().Where(e => e.Id == id).FirstOrDefaultAsync();
-        }
+        // Student Methods (Get/Save er uændrede)
+        public async Task<List<Student>> GetStudentsForExamAsync(int examId) { /* ... */ }
+        public async Task<int> SaveStudentAsync(Student student) { /* ... */ }
 
-        public async Task<int> SaveExamAsync(Exam exam)
+        // NY METODE: Slet en specifik studerende
+        public async Task<int> DeleteStudentAsync(Student student)
         {
             await InitializeAsync();
-            if (exam.Id != 0)
-            {
-                return await _database.UpdateAsync(exam);
-            }
-            else
-            {
-                return await _database.InsertAsync(exam);
-            }
-        }
-
-        // Student Methods
-        public async Task<List<Student>> GetStudentsForExamAsync(int examId)
-        {
-            await InitializeAsync();
-            return await _database.Table<Student>().Where(s => s.ExamId == examId).OrderBy(s => s.Order).ToListAsync();
-        }
-
-        public async Task<int> SaveStudentAsync(Student student)
-        {
-            await InitializeAsync();
-             if (student.Id != 0)
-            {
-                return await _database.UpdateAsync(student);
-            }
-            else
-            {
-                // Set order for new student
-                var existingStudents = await GetStudentsForExamAsync(student.ExamId);
-                student.Order = existingStudents.Count > 0 ? existingStudents.Max(s => s.Order) + 1 : 1;
-                return await _database.InsertAsync(student);
-            }
+            return await _database.DeleteAsync(student);
         }
     }
 }
-
